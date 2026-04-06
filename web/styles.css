@@ -1,0 +1,21 @@
+*{box-sizing:border-box;margin:0;padding:0;}body{min-height:100vh;font-family:Inter,system-ui,sans-serif;background:#0d2355;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;}
+.app-shell{width:min(1000px,100%);background:#112f69;border:1px solid rgba(255,255,255,.12);border-radius:28px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.35);}
+.hero{padding:32px 28px;border-bottom:1px solid rgba(255,255,255,.08);}
+.hero h1{font-size:clamp(2rem,4vw,3.2rem);margin-bottom:12px;}
+.hero p{color:#c9d7ff;line-height:1.8;max-width:54rem;}
+.page-wrap{padding:28px;}
+.page{display:none;gap:20px;position:relative;}
+.page.active{display:grid;}
+.bubble{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:24px;display:grid;gap:14px;}
+.bubble label{font-size:.95rem;color:#e8ecff;}
+.bubble input,.bubble select{width:100%;border:none;border-radius:16px;padding:14px 16px;background:rgba(255,255,255,.08);color:#fff;font-size:1rem;outline:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);}
+.bubble select option{color:#000;background:#fff;}
+.bubble input::placeholder{color:rgba(255,255,255,.65);}
+.row{display:grid;gap:16px;}
+.row-cols-2{grid-template-columns:1fr 1fr;}
+.date-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.actions{display:flex;justify-content:flex-end;margin-top:18px;}
+.button{background:#3b7cff;color:#fff;border:none;border-radius:18px;padding:16px 28px;font-size:1rem;font-weight:700;cursor:pointer;transition:transform .2s ease,background .2s ease;}
+.button:hover{transform:translateY(-1px);background:#5c8dff;}
+#planContent{white-space:pre-wrap;line-height:1.8;color:#e8ecff;}
+@media(max-width:720px){.hero{padding:24px 18px;}.page-wrap{padding:24px;}.row-cols-2{grid-template-columns:1fr;}.date-grid{grid-template-columns:1fr;}.actions{justify-content:center;}}

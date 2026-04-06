@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitness Tracker</title>
+  <link rel="stylesheet" href="/fitness-tracker/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <div class="hero">
+      <div>
+        <h1>Fitness Tracker</h1>
+        <h2 style="color: yellow;">Created by Aditya Srinivasan. Check out my Fitness Tracker to get an idea of how you'd want to come up with a good plan for fitness and diet!</h2>
+        <p style="color: yellow; font-size:0.9em; margin-top:4px; margin-bottom:8px;">Created in San Francisco, California in 2026</p>
+      </div>
+    </div>
+
+    <div class="page-wrap">
+      <section class="page active" id="page1">
+        <p style="text-align:center; margin-bottom:20px; font-size:1.5em;">Enter your personal details</p>
+        <div class="bubble">
+          <label>Height</label>
+          <div class="row row-cols-2" style="gap:12px;">
+            <div>
+              <input id="heightFeet" type="text" maxlength="1" inputmode="numeric" pattern="\d*" placeholder="Feet">
+            </div>
+            <div>
+              <input id="heightInches" type="text" maxlength="2" inputmode="numeric" pattern="\d*" placeholder="Inches">
+            </div>
+          </div>
+          <small style="color:#d7e1ff;">Enter height as feet and inches (e.g. 5 ft 9 in).</small>
+        </div>
+        <div class="bubble">
+          <label for="weight">Current Weight (lbs)</label>
+          <input id="weight" type="text" inputmode="numeric" pattern="\d*" maxlength="3" placeholder="Example: 155">
+        </div>
+        <div class="bubble">
+          <label for="age">Age</label>
+          <input id="age" type="text" inputmode="numeric" pattern="\d*" maxlength="3" placeholder="Age" title="Enter age up to 100">
+          <small style="color:#d7e1ff;">Age range 10-100.</small>
+        </div>
+        <div class="bubble">
+          <label for="gender">Gender</label>
+          <select id="gender">
+            <option value="">Select gender</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="actions" style="gap:12px;">
+          <button class="button" id="clear1">Clear</button>
+          <button class="button" id="next1">Next</button>
+        </div>
+      </section>
+
+      <section class="page" id="page2">
+        <p style="text-align:center; margin-bottom:20px; font-size:1.5em;">Select your goal and other relevant info</p>
+        <div class="bubble">
+          <label for="goal">The fitness goal</label>
+          <select id="goal">
+            <option>Gaining Weight</option>
+            <option>Gaining Muscle</option>
+            <option>Losing Weight</option>
+            <option>Losing Fat</option>
+            <option>Proper Diet</option>
+            <option>Any General Advice</option>
+          </select>
+        </div>
+        <div class="bubble">
+          <label for="diet">Diet type</label>
+          <select id="diet">
+            <option>Non-vegetarian</option>
+            <option>Vegetarian</option>
+            <option>Vegan</option>
+          </select>
+        </div>
+        <div class="bubble date-row">
+          <label>Target Date</label>
+          <div class="date-grid">
+            <input id="month" type="text" maxlength="2" inputmode="numeric" pattern="\d*" placeholder="MM">
+            <input id="day" type="text" maxlength="2" inputmode="numeric" pattern="\d*" placeholder="DD">
+            <input id="year" type="text" maxlength="4" inputmode="numeric" pattern="\d*" placeholder="YYYY">
+          </div>
+        </div>
+        <div class="bubble">
+          <label for="targetWeight">Target Weight (lbs)</label>
+          <input id="targetWeight" type="text" inputmode="numeric" pattern="\d*" maxlength="3" placeholder="Example: 170">
+        </div>
+        <div class="bubble">
+          <label for="sleepHours">Hours of Sleep</label>
+          <input id="sleepHours" type="text" inputmode="numeric" pattern="\d*" maxlength="2" placeholder="Example: 8">
+          <small style="color:#d7e1ff;">Enter how many hours you sleep per night.</small>
+        </div>
+        <div class="actions" style="gap:12px;">
+          <button class="button" id="clear2">Clear</button>
+          <button class="button" id="back2">Back</button>
+          <button class="button" id="next2">Generate Plan</button>
+        </div>
+      </section>
+
+      <section class="page" id="page3">
+        <div class="bubble" id="planContent"></div>
+        <div class="actions">
+          <button class="button" id="restartBtn">Start Over</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="/fitness-tracker/app.js"></script>
+</body>
+</html>
