@@ -1,4 +1,4 @@
-package com.fitnesstracker;
+package com.fitnesstracker.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

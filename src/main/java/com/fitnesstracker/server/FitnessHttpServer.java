@@ -1,5 +1,7 @@
-package com.fitnesstracker;
+package com.fitnesstracker.server;
 
+import com.fitnesstracker.handler.RedirectHandler;
+import com.fitnesstracker.handler.StaticFileHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import java.net.InetSocketAddress;

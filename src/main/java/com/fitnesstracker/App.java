@@ -1,4 +1,6 @@
-import com.fitnesstracker.FitnessHttpServer;
+package com.fitnesstracker;
+
+import com.fitnesstracker.server.FitnessHttpServer;
 
 public class App {
     public static void main(String[] args) throws Exception {
