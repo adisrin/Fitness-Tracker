@@ -18,4 +18,12 @@
 .button{background:#3b7cff;color:#fff;border:none;border-radius:18px;padding:16px 28px;font-size:1rem;font-weight:700;cursor:pointer;transition:transform .2s ease,background .2s ease;}
 .button:hover{transform:translateY(-1px);background:#5c8dff;}
 #planContent{white-space:pre-wrap;line-height:1.8;color:#e8ecff;}
-@media(max-width:720px){.hero{padding:24px 18px;}.page-wrap{padding:24px;}.row-cols-2{grid-template-columns:1fr;}.date-grid{grid-template-columns:1fr;}.actions{justify-content:center;}}
+@media(max-width:720px){
+  body{align-items:flex-start;padding:12px;}
+  .hero{padding:20px 16px;}
+  .page-wrap{padding:16px;}
+  .page{gap:12px;}
+  .bubble{padding:16px;gap:10px;}
+  .row-cols-2{grid-template-columns:1fr;}
+  .actions{justify-content:center;}
+}
