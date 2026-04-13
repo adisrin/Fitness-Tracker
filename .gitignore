@@ -1,5 +1,8 @@
 # IDE
 .vscode/
+.classpath
+.project
+.settings/
 
 # Maven build output
 target/
@@ -7,5 +10,13 @@ target/
 # Legacy compile output
 bin/
 
-# Compiled class files anywhere in src/
+# Compiled class files
 src/**/*.class
+*.class
+
+# Local dependencies
+lib/*.jar
+
+# OS files
+.DS_Store
+Thumbs.db
