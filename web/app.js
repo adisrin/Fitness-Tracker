@@ -415,3 +415,66 @@ function estimateMaintenance(weight, height, age, gender, activityLevel) {
 function formatDate(date) {
   return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
 }
+
+// ── Q&A section ───────────────────────────────────────────────
+const qaInput = document.getElementById('qaInput');
+const qaBtn   = document.getElementById('qaBtn');
+const qaThread = document.getElementById('qaThread');
+
+qaBtn.addEventListener('click', submitQuestion);
+qaInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitQuestion(); });
+
+async function submitQuestion() {
+  const question = qaInput.value.trim();
+  if (!question) return;
+
+  const planContext = planContent.innerText.trim();
+  qaInput.value = '';
+  qaInput.disabled = true;
+  qaBtn.disabled = true;
+
+  appendQaBubble('user', question);
+  const loadingEl = appendQaBubble('assistant', '...');
+  loadingEl.classList.add('qa-loading');
+
+  try {
+    const res = await fetch('/fitness-tracker/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, planContext }),
+    });
+
+    const data = await res.json();
+    loadingEl.classList.remove('qa-loading');
+
+    if (!res.ok || data.error) {
+      loadingEl.textContent = data.error || 'Something went wrong. Please try again.';
+      loadingEl.classList.add('qa-error');
+    } else {
+      loadingEl.textContent = data.answer;
+    }
+  } catch (err) {
+    loadingEl.classList.remove('qa-loading');
+    loadingEl.textContent = 'Could not reach the server. Make sure it is running.';
+    loadingEl.classList.add('qa-error');
+  } finally {
+    qaInput.disabled = false;
+    qaBtn.disabled = false;
+    qaInput.focus();
+  }
+}
+
+function appendQaBubble(role, text) {
+  const bubble = document.createElement('div');
+  bubble.className = `qa-bubble qa-${role}`;
+  const label = document.createElement('span');
+  label.className = 'qa-label';
+  label.textContent = role === 'user' ? 'You' : 'Claude';
+  const content = document.createElement('p');
+  content.textContent = text;
+  bubble.appendChild(label);
+  bubble.appendChild(content);
+  qaThread.appendChild(bubble);
+  bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  return content;
+}
