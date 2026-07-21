@@ -9,16 +9,26 @@
 <body>
   <div class="app-shell">
     <div class="hero">
-      <div>
+      <div class="hero-title">
         <h1>Fitness Tracker</h1>
+        <p class="hero-tagline">Your personalized plan for fitness, nutrition, and diet.</p>
       </div>
-      <button class="about-btn" id="aboutBtn" aria-label="About">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
-          <circle cx="12" cy="8" r="4"/>
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-        </svg>
-        <span>About</span>
-      </button>
+      <div class="hero-actions">
+        <button class="about-btn" id="homeBtn" aria-label="Home / Start Over">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+            <path d="M4 11.5 12 4l8 7.5"/>
+            <path d="M6 10v9h12v-9"/>
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="about-btn" id="aboutBtn" aria-label="About">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          <span>About</span>
+        </button>
+      </div>
     </div>
 
     <div class="about-modal" id="aboutModal" role="dialog" aria-modal="true" aria-label="About">
@@ -30,7 +40,35 @@
     </div>
 
     <div class="page-wrap">
-      <section class="page active" id="page1">
+      <section class="page active" id="pageHome">
+        <div class="home-intro">
+          <h2>How would you like to get started?</h2>
+          <p>Chat with Claude directly, or fill out your details step by step — either way you'll get a personalized plan.</p>
+        </div>
+        <div class="entry-grid">
+          <button class="entry-card" id="entryDirectBtn">
+            <span class="entry-icon" aria-hidden="true">💬</span>
+            <span class="entry-card-title">Ask Me Directly</span>
+            <span class="entry-card-desc">Chat with Claude, ask questions, and upload meal photos for instant calorie &amp; macro estimates.</span>
+          </button>
+          <button class="entry-card" id="entryManualBtn">
+            <span class="entry-icon" aria-hidden="true">📋</span>
+            <span class="entry-card-title">Enter Details Manually</span>
+            <span class="entry-card-desc">Answer a short step-by-step form and get a structured fitness &amp; nutrition plan.</span>
+          </button>
+        </div>
+        <div class="about-card home-about">
+          <p>Created by Aditya Srinivasan. Check out my Fitness Tracker to get an idea of how you'd want to come up with a good plan for fitness and diet!</p>
+          <p class="about-location">Created in San Francisco, California in 2026</p>
+        </div>
+      </section>
+
+      <section class="page" id="page1">
+        <div class="step-indicator" aria-hidden="true">
+          <span class="step-dot active"></span>
+          <span class="step-dot"></span>
+          <span>Step 1 of 2</span>
+        </div>
         <p style="text-align:center; margin-bottom:20px; font-size:1.5em;">Enter your personal details</p>
         <div class="bubble">
           <label>Height</label>
@@ -73,6 +111,11 @@
       </section>
 
       <section class="page" id="page2">
+        <div class="step-indicator" aria-hidden="true">
+          <span class="step-dot done"></span>
+          <span class="step-dot active"></span>
+          <span>Step 2 of 2</span>
+        </div>
         <p style="text-align:center; margin-bottom:20px; font-size:1.5em;">Select your goal and other relevant info</p>
         <div class="bubble">
           <label for="goal">Fitness goal</label>
@@ -146,6 +189,21 @@
           <div class="qa-input-row">
             <input type="text" id="qaInput" placeholder="Ask a follow-up question..." autocomplete="off" />
             <button class="button" id="qaBtn">Ask</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="pageDirect">
+        <p style="text-align:center; margin-bottom:20px; font-size:1.5em;">Ask Claude directly</p>
+        <div class="qa-section">
+          <p class="qa-title">Chat with Claude, or attach photos of your meals for a calorie &amp; macro estimate.</p>
+          <div class="qa-thread" id="directThread"></div>
+          <div class="direct-attachments" id="directAttachments"></div>
+          <div class="qa-input-row direct-input-row">
+            <input type="file" id="directImageInput" accept="image/*" multiple hidden>
+            <button type="button" class="button button-secondary attach-btn" id="directAttachBtn" aria-label="Attach photos" title="Attach meal photos">📷</button>
+            <input type="text" id="directInput" placeholder="Ask a question or describe your meal..." autocomplete="off" />
+            <button class="button" id="directSendBtn">Send</button>
           </div>
         </div>
       </section>

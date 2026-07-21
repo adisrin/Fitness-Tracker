@@ -7,9 +7,11 @@ aboutClose.addEventListener('click', () => aboutModal.classList.remove('open'));
 aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.classList.remove('open'); });
 
 // ── DOM refs ──────────────────────────────────────────────────
+const pageHome = document.getElementById('pageHome');
 const page1 = document.getElementById('page1');
 const page2 = document.getElementById('page2');
 const page3 = document.getElementById('page3');
+const pageDirect = document.getElementById('pageDirect');
 const planContent = document.getElementById('planContent');
 const targetWeightBubble = document.getElementById('targetWeightBubble');
 
@@ -112,8 +114,34 @@ loadFromStorage();
 
 // ── Page navigation ───────────────────────────────────────────
 function showPage(page) {
-  [page1, page2, page3].forEach(p => p.classList.remove('active'));
+  [pageHome, page1, page2, page3, pageDirect].forEach(p => p.classList.remove('active'));
   page.classList.add('active');
+}
+
+// ── Home page (choose entry point) ─────────────────────────────
+document.getElementById('entryManualBtn').addEventListener('click', () => showPage(page1));
+document.getElementById('entryDirectBtn').addEventListener('click', () => showPage(pageDirect));
+
+// ── Home / Start Over button (always visible, resets everything) ─
+document.getElementById('homeBtn').addEventListener('click', resetAndGoHome);
+
+function resetAndGoHome() {
+  ['heightFeet','heightInches','weight','age','month','day','year','targetWeight','sleepHours']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('gender').selectedIndex = 0;
+  document.getElementById('goal').selectedIndex = 0;
+  document.getElementById('diet').selectedIndex = 0;
+  document.getElementById('activityLevel').value = '1.55';
+  planContent.innerHTML = '';
+  clearAllErrors();
+  clearStorage();
+  updateTargetWeightVisibility();
+  qaThread.innerHTML = '';
+  directThread.innerHTML = '';
+  directMessages = [];
+  pendingImages = [];
+  renderPendingImages();
+  showPage(pageHome);
 }
 
 // Page 1 → just navigate, no validation
@@ -261,19 +289,7 @@ document.getElementById('next2').addEventListener('click', () => {
 });
 
 // ── Restart / Copy / Print ────────────────────────────────────
-document.getElementById('restartBtn').addEventListener('click', () => {
-  ['heightFeet','heightInches','weight','age','month','day','year','targetWeight','sleepHours']
-    .forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('gender').selectedIndex = 0;
-  document.getElementById('goal').selectedIndex = 0;
-  document.getElementById('diet').selectedIndex = 0;
-  document.getElementById('activityLevel').value = '1.55';
-  planContent.innerHTML = '';
-  clearAllErrors();
-  clearStorage();
-  updateTargetWeightVisibility();
-  showPage(page1);
-});
+document.getElementById('restartBtn').addEventListener('click', resetAndGoHome);
 
 document.getElementById('copyBtn').addEventListener('click', () => {
   const text = planContent.innerText || planContent.textContent;
@@ -467,14 +483,178 @@ async function submitQuestion() {
 function appendQaBubble(role, text) {
   const bubble = document.createElement('div');
   bubble.className = `qa-bubble qa-${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'qa-avatar';
+  avatar.textContent = role === 'user' ? '🧑' : '🤖';
+  bubble.appendChild(avatar);
+
+  const body = document.createElement('div');
+  body.className = 'qa-body';
+
   const label = document.createElement('span');
   label.className = 'qa-label';
   label.textContent = role === 'user' ? 'You' : 'Claude';
+  body.appendChild(label);
+
   const content = document.createElement('p');
   content.textContent = text;
-  bubble.appendChild(label);
-  bubble.appendChild(content);
+  body.appendChild(content);
+
+  bubble.appendChild(body);
   qaThread.appendChild(bubble);
+  bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  return content;
+}
+
+// ── Direct chat (Ask Me Directly) ──────────────────────────────
+const directThread = document.getElementById('directThread');
+const directInput = document.getElementById('directInput');
+const directSendBtn = document.getElementById('directSendBtn');
+const directAttachBtn = document.getElementById('directAttachBtn');
+const directImageInput = document.getElementById('directImageInput');
+const directAttachments = document.getElementById('directAttachments');
+
+let directMessages = [];
+let pendingImages = [];
+
+directAttachBtn.addEventListener('click', () => directImageInput.click());
+
+directImageInput.addEventListener('change', async () => {
+  const files = Array.from(directImageInput.files);
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    const dataUrl = await readFileAsDataUrl(file);
+    pendingImages.push({ mediaType: file.type, dataUrl, base64: dataUrl.split(',')[1] });
+  }
+  directImageInput.value = '';
+  renderPendingImages();
+});
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPendingImages() {
+  directAttachments.innerHTML = '';
+  pendingImages.forEach((img, idx) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'direct-thumb';
+
+    const imgEl = document.createElement('img');
+    imgEl.src = img.dataUrl;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'direct-thumb-remove';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => {
+      pendingImages.splice(idx, 1);
+      renderPendingImages();
+    });
+
+    thumb.appendChild(imgEl);
+    thumb.appendChild(removeBtn);
+    directAttachments.appendChild(thumb);
+  });
+}
+
+directSendBtn.addEventListener('click', sendDirectMessage);
+directInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendDirectMessage(); });
+
+async function sendDirectMessage() {
+  const text = directInput.value.trim();
+  const images = pendingImages.slice();
+  if (!text && images.length === 0) return;
+
+  const content = [];
+  images.forEach(img => {
+    content.push({ type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.base64 } });
+  });
+  if (text) content.push({ type: 'text', text });
+
+  directMessages.push({ role: 'user', content });
+  appendDirectBubble('user', text, images.map(img => img.dataUrl));
+
+  directInput.value = '';
+  pendingImages = [];
+  renderPendingImages();
+  directInput.disabled = true;
+  directSendBtn.disabled = true;
+  directAttachBtn.disabled = true;
+
+  const loadingEl = appendDirectBubble('assistant', '...');
+  loadingEl.classList.add('qa-loading');
+
+  try {
+    const res = await fetch('/fitness-tracker/api/direct-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: directMessages }),
+    });
+
+    const data = await res.json();
+    loadingEl.classList.remove('qa-loading');
+
+    if (!res.ok || data.error) {
+      loadingEl.textContent = data.error || 'Something went wrong. Please try again.';
+      loadingEl.classList.add('qa-error');
+      directMessages.pop();
+    } else {
+      loadingEl.textContent = data.answer;
+      directMessages.push({ role: 'assistant', content: [{ type: 'text', text: data.answer }] });
+    }
+  } catch (err) {
+    loadingEl.classList.remove('qa-loading');
+    loadingEl.textContent = 'Could not reach the server. Make sure it is running.';
+    loadingEl.classList.add('qa-error');
+    directMessages.pop();
+  } finally {
+    directInput.disabled = false;
+    directSendBtn.disabled = false;
+    directAttachBtn.disabled = false;
+    directInput.focus();
+  }
+}
+
+function appendDirectBubble(role, text, imageUrls = []) {
+  const bubble = document.createElement('div');
+  bubble.className = `qa-bubble qa-${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'qa-avatar';
+  avatar.textContent = role === 'user' ? '🧑' : '🤖';
+  bubble.appendChild(avatar);
+
+  const body = document.createElement('div');
+  body.className = 'qa-body';
+
+  const label = document.createElement('span');
+  label.className = 'qa-label';
+  label.textContent = role === 'user' ? 'You' : 'Claude';
+  body.appendChild(label);
+
+  if (imageUrls.length > 0) {
+    const imgRow = document.createElement('div');
+    imgRow.className = 'qa-images';
+    imageUrls.forEach(url => {
+      const imgEl = document.createElement('img');
+      imgEl.src = url;
+      imgRow.appendChild(imgEl);
+    });
+    body.appendChild(imgRow);
+  }
+
+  const content = document.createElement('p');
+  content.textContent = text;
+  body.appendChild(content);
+
+  bubble.appendChild(body);
+  directThread.appendChild(bubble);
   bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   return content;
 }

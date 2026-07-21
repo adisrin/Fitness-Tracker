@@ -14,9 +14,21 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
-public class ClaudeApiHandler implements HttpHandler {
+public class DirectChatHandler implements HttpHandler {
     private static final String API_URL = "https://api.anthropic.com/v1/messages";
     private static final String MODEL = "claude-sonnet-5";
+    private static final String SYSTEM_PROMPT =
+        "You are a knowledgeable fitness and nutrition assistant embedded in a fitness tracker app. " +
+        "The user has chosen to skip the manual intake form and talk to you directly instead. " +
+        "If you do not yet know their height, weight, age, gender, activity level, and fitness goal, " +
+        "ask for whichever of those you need in a friendly, conversational way (a few at a time, not " +
+        "an interrogation) before giving calorie or macro targets — you need them to give a personalized " +
+        "estimate the same way the app's form-based plan would. " +
+        "When the user uploads a photo of a meal, analyze it and give an approximate breakdown of calories, " +
+        "protein, carbs, and fat, clearly stating these are estimates. Then relate that meal back to their " +
+        "daily targets and goal if you know them. " +
+        "Keep responses conversational, clear, and concise.";
+
     private final Gson gson = new Gson();
 
     @Override
@@ -45,31 +57,25 @@ public class ClaudeApiHandler implements HttpHandler {
         }
 
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-        JsonObject requestJson = gson.fromJson(body, JsonObject.class);
-        String question = requestJson.get("question").getAsString().trim();
-        String planContext = requestJson.get("planContext").getAsString().trim();
+        JsonObject requestJson;
+        JsonArray messages;
+        try {
+            requestJson = gson.fromJson(body, JsonObject.class);
+            messages = requestJson.getAsJsonArray("messages");
+        } catch (Exception e) {
+            sendJson(exchange, 400, errorJson("Malformed request body"));
+            return;
+        }
 
-        if (question.isEmpty()) {
-            sendJson(exchange, 400, errorJson("Question cannot be empty"));
+        if (messages == null || messages.size() == 0) {
+            sendJson(exchange, 400, errorJson("messages cannot be empty"));
             return;
         }
 
         JsonObject claudeRequest = new JsonObject();
         claudeRequest.addProperty("model", MODEL);
-        claudeRequest.addProperty("max_tokens", 1024);
-        claudeRequest.addProperty("system",
-            "You are a knowledgeable fitness and nutrition assistant. " +
-            "The user has received the following personalised fitness plan:\n\n" +
-            planContext + "\n\n" +
-            "Answer their follow-up questions clearly and concisely. " +
-            "Keep your advice consistent with this plan and their stated goals. " +
-            "Do not repeat the full plan back — just address the question directly.");
-
-        JsonArray messages = new JsonArray();
-        JsonObject userMessage = new JsonObject();
-        userMessage.addProperty("role", "user");
-        userMessage.addProperty("content", question);
-        messages.add(userMessage);
+        claudeRequest.addProperty("max_tokens", 1500);
+        claudeRequest.addProperty("system", SYSTEM_PROMPT);
         claudeRequest.add("messages", messages);
 
         try {
