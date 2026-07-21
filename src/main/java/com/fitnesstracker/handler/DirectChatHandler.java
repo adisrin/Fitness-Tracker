@@ -97,12 +97,7 @@ public class DirectChatHandler implements HttpHandler {
                 return;
             }
 
-            String answer = responseJson
-                .getAsJsonArray("content")
-                .get(0)
-                .getAsJsonObject()
-                .get("text")
-                .getAsString();
+            String answer = ClaudeResponseParser.extractText(responseJson);
 
             JsonObject result = new JsonObject();
             result.addProperty("answer", answer);

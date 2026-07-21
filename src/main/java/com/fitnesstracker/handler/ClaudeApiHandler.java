@@ -46,6 +46,10 @@ public class ClaudeApiHandler implements HttpHandler {
 
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         JsonObject requestJson = gson.fromJson(body, JsonObject.class);
+        if (requestJson == null || !requestJson.has("question") || !requestJson.has("planContext")) {
+            sendJson(exchange, 400, errorJson("Request must include 'question' and 'planContext'"));
+            return;
+        }
         String question = requestJson.get("question").getAsString().trim();
         String planContext = requestJson.get("planContext").getAsString().trim();
 
@@ -91,12 +95,7 @@ public class ClaudeApiHandler implements HttpHandler {
                 return;
             }
 
-            String answer = responseJson
-                .getAsJsonArray("content")
-                .get(0)
-                .getAsJsonObject()
-                .get("text")
-                .getAsString();
+            String answer = ClaudeResponseParser.extractText(responseJson);
 
             JsonObject result = new JsonObject();
             result.addProperty("answer", answer);
