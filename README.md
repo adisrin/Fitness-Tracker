@@ -1,17 +1,34 @@
 # Fitness Tracker
 
-A lightweight Java web application that runs a local HTTP server and delivers a personalized fitness planning tool in the browser. No frameworks, no external dependencies — just plain Java and vanilla HTML/CSS/JS.
+A lightweight Java web application that runs a local HTTP server and delivers a personalized fitness planning tool in the browser. No web framework — just plain Java, vanilla HTML/CSS/JS, and the Claude API for the conversational features.
 
 ## What It Does
 
-A two-page wizard collects your personal details and fitness goal, then generates a structured, personalized plan covering:
+From the home screen you choose how to start:
+
+| Entry point | What it does |
+|---|---|
+| **Ask Me Directly** | Chat with Claude, ask fitness and nutrition questions, and attach meal photos for calorie & macro estimates |
+| **Enter Details Manually** | Fill out a two-step form and get a structured, personalized plan |
+
+### The generated plan
+
+The manual path collects your personal details and fitness goal, then generates a plan covering:
 
 - **Goal strategy** — tailored advice and food recommendations based on your goal and diet type
 - **Calorie target** — daily calorie goal derived from your BMR, activity level, weight delta, and target date
 - **Sleep assessment** — feedback on whether your sleep supports your fitness progress
 - **Safety warnings** — flags overly aggressive timelines or dangerously low calorie targets
 
-Form inputs are saved to `localStorage` so your data persists across page refreshes. The results page includes **Copy** and **Print** options.
+Form inputs are saved to `localStorage` so your data persists across page refreshes. The results page includes **Copy**, **Print**, and **Start Over** options.
+
+### Ask about your plan
+
+Below the generated plan is a Q&A box. Questions are sent to Claude along with the full text of your plan, so answers stay consistent with the goals and calorie targets you were given.
+
+### Ask Claude directly
+
+The direct chat skips the form entirely. Claude asks for whatever details it needs (height, weight, age, gender, activity level, goal) before giving calorie or macro targets. You can also attach photos of meals — Claude estimates calories, protein, carbs, and fat, and relates the meal back to your daily targets.
 
 ## Supported Goals
 
@@ -54,20 +71,33 @@ The daily calorie adjustment is calculated from the weight delta and target date
 |----------|-------------------------------------|
 | Server   | Java 17 — `com.sun.net.httpserver`  |
 | Frontend | Vanilla HTML, CSS, JavaScript       |
+| AI       | Claude API (`claude-sonnet-5`) via `/v1/messages` |
+| JSON     | Gson                                |
 | Build    | Maven (`pom.xml`)                   |
+
+## HTTP Routes
+
+| Route | Handler | Purpose |
+|---|---|---|
+| `/fitness-tracker` | `StaticFileHandler` | Serves `web/` (HTML, CSS, JS) |
+| `/fitness-tracker/api/ask` | `ClaudeApiHandler` | Plan follow-up questions (`question` + `planContext`) |
+| `/fitness-tracker/api/direct-chat` | `DirectChatHandler` | Direct chat, including meal-photo analysis (`messages`) |
+| `/` | `RedirectHandler` | Redirects to `/fitness-tracker` |
 
 ## Project Structure
 
 ```
 Fitness Tracker/
-├── src/
+├── src/main/java/com/fitnesstracker/
 │   ├── App.java
-│   └── com/fitnesstracker/
-│       ├── FitnessHttpServer.java
-│       ├── FitnessHtmlBuilder.java
-│       ├── FitnessPageHandler.java
-│       ├── StaticFileHandler.java
-│       └── RedirectHandler.java
+│   ├── handler/
+│   │   ├── ClaudeApiHandler.java       # /api/ask — plan Q&A
+│   │   ├── ClaudeResponseParser.java   # extracts text from Claude responses
+│   │   ├── DirectChatHandler.java      # /api/direct-chat — chat + meal photos
+│   │   ├── RedirectHandler.java
+│   │   └── StaticFileHandler.java
+│   └── server/
+│       └── FitnessHttpServer.java      # route registration
 ├── web/
 │   ├── index.html
 │   ├── app.js
@@ -81,11 +111,21 @@ Fitness Tracker/
 
 - Java 17 or later
 - Maven
+- An Anthropic API key — required for both chat features (the plan itself is calculated locally and works without one)
 
 ### Run
 
+Pass your API key as an environment variable:
+
 ```bash
+export ANTHROPIC_API_KEY=your-key
 mvn exec:java
+```
+
+Or as a system property:
+
+```bash
+mvn exec:java -DANTHROPIC_API_KEY=your-key
 ```
 
 Then open your browser and navigate to:
@@ -93,6 +133,8 @@ Then open your browser and navigate to:
 ```
 http://localhost:8080/fitness-tracker
 ```
+
+If the key is missing, the app still runs and generates plans — the chat endpoints return an error explaining how to set it.
 
 ### Build executable JAR
 
