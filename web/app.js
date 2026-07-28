@@ -140,6 +140,8 @@ function resetAndGoHome() {
   directThread.innerHTML = '';
   directMessages = [];
   pendingImages = [];
+  directDetailsRequested = false;
+  carriedChatSummary = '';
   renderPendingImages();
   showPage(pageHome);
 }
@@ -284,7 +286,7 @@ document.getElementById('next2').addEventListener('click', () => {
 
   if (!valid) return;
 
-  planContent.innerHTML = generatePlan({ height, currentWeight, age, gender, goal, diet, activityLevel, targetDate, targetWeight, sleepHours });
+  planContent.innerHTML = generatePlan({ height, currentWeight, age, gender, goal, diet, activityLevel, targetDate, targetWeight, sleepHours, chatSummary: carriedChatSummary });
   showPage(page3);
 });
 
@@ -380,6 +382,11 @@ function generatePlan(data) {
   html += planSection('Sleep', sleepAdvice);
   if (warnings.length > 0) {
     html += planSection('Warning', warnings.join('<br><br>'), 'plan-warning');
+  }
+  if (data.chatSummary) {
+    html += planSection('From Your Meal Chat',
+      `Notes carried over from your chat with Claude. Ask a follow-up below to work out how these fit against your <strong>${calorieTarget.toLocaleString()}</strong> cal/day target.<br><br>` +
+      escapeHtml(data.chatSummary).replace(/\n/g, '<br>'));
   }
   html += '</div>';
   return html;
@@ -518,6 +525,11 @@ const directAttachments = document.getElementById('directAttachments');
 let directMessages = [];
 let pendingImages = [];
 
+// Set once Claude has asked for the details form, so it is only offered a single time.
+let directDetailsRequested = false;
+// Text summary of the direct chat, carried into the generated plan.
+let carriedChatSummary = '';
+
 directAttachBtn.addEventListener('click', () => directImageInput.click());
 
 directImageInput.addEventListener('change', async () => {
@@ -594,7 +606,7 @@ async function sendDirectMessage() {
     const res = await fetch('/fitness-tracker/api/direct-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: directMessages }),
+      body: JSON.stringify({ messages: directMessages, detailsRequested: directDetailsRequested }),
     });
 
     const data = await res.json();
@@ -607,6 +619,12 @@ async function sendDirectMessage() {
     } else {
       loadingEl.textContent = data.answer;
       directMessages.push({ role: 'assistant', content: [{ type: 'text', text: data.answer }] });
+
+      // Claude called the collect_personal_details tool — offer the form.
+      if (data.action === 'collect_details' && !directDetailsRequested) {
+        directDetailsRequested = true;
+        appendDetailsCta();
+      }
     }
   } catch (err) {
     loadingEl.classList.remove('qa-loading');
@@ -657,4 +675,58 @@ function appendDirectBubble(role, text, imageUrls = []) {
   directThread.appendChild(bubble);
   bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   return content;
+}
+
+// ── Route from the chat into the details form ───────────────────
+function appendDetailsCta() {
+  const wrap = document.createElement('div');
+  wrap.className = 'details-cta';
+
+  const btn = document.createElement('button');
+  btn.className = 'button';
+  btn.textContent = '📋 Fill in my details';
+  btn.addEventListener('click', () => {
+    carriedChatSummary = buildChatSummary();
+    showPage(page1);
+  });
+
+  const note = document.createElement('p');
+  note.className = 'details-cta-note';
+  note.textContent = 'Your answers there are combined with this chat — including the meals above — to build the full plan.';
+
+  wrap.appendChild(btn);
+  wrap.appendChild(note);
+  directThread.appendChild(wrap);
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Flattens the chat into plain text. Photos become a "[1 meal photo]" marker — Claude's written
+// estimate of each one is already in the transcript, so the images themselves aren't re-sent.
+function buildChatSummary() {
+  const MAX_LINE = 600;
+  const MAX_TOTAL = 2500;
+
+  const lines = [];
+  directMessages.forEach(msg => {
+    const blocks = Array.isArray(msg.content) ? msg.content : [];
+    const text = blocks.filter(b => b.type === 'text').map(b => b.text).join(' ').trim();
+    const photos = blocks.filter(b => b.type === 'image').length;
+    if (!text && !photos) return;
+
+    const who = msg.role === 'user' ? 'You' : 'Claude';
+    const marker = photos > 0 ? `[${photos} meal photo${photos === 1 ? '' : 's'}] ` : '';
+    const line = `${who}: ${marker}${text}`.trim();
+    lines.push(line.length > MAX_LINE ? line.slice(0, MAX_LINE) + '…' : line);
+  });
+
+  const summary = lines.join('\n');
+  return summary.length > MAX_TOTAL ? '…\n' + summary.slice(-MAX_TOTAL) : summary;
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }

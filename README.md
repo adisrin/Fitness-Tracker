@@ -28,7 +28,9 @@ Below the generated plan is a Q&A box. Questions are sent to Claude along with t
 
 ### Ask Claude directly
 
-The direct chat skips the form entirely. Claude asks for whatever details it needs (height, weight, age, gender, activity level, goal) before giving calorie or macro targets. You can also attach photos of meals — Claude estimates calories, protein, carbs, and fat, and relates the meal back to your daily targets.
+The direct chat skips the form entirely. Attach photos of meals and Claude estimates calories, protein, carbs, and fat.
+
+When Claude needs your measurements to give real calorie or macro targets, it doesn't ask for them one at a time — it calls a `collect_personal_details` tool, and the app surfaces a **Fill in my details** button that routes you into the step-by-step form. A text summary of the chat (including Claude's photo estimates) is carried across, so the generated plan ends with a **From Your Meal Chat** section and the plan's Q&A can reason about those meals against your calorie target.
 
 ## Supported Goals
 
@@ -81,7 +83,7 @@ The daily calorie adjustment is calculated from the weight delta and target date
 |---|---|---|
 | `/fitness-tracker` | `StaticFileHandler` | Serves `web/` (HTML, CSS, JS) |
 | `/fitness-tracker/api/ask` | `ClaudeApiHandler` | Plan follow-up questions (`question` + `planContext`) |
-| `/fitness-tracker/api/direct-chat` | `DirectChatHandler` | Direct chat, including meal-photo analysis (`messages`) |
+| `/fitness-tracker/api/direct-chat` | `DirectChatHandler` | Direct chat and meal-photo analysis (`messages`, `detailsRequested`). Runs a tool-use loop; replies with `action: "collect_details"` when Claude wants the details form |
 | `/` | `RedirectHandler` | Redirects to `/fitness-tracker` |
 
 ## Project Structure
