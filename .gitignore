@@ -20,3 +20,6 @@ lib/*.jar
 # OS files
 .DS_Store
 Thumbs.db
+
+# Workspace file
+Fitness Tracker.code-workspace
